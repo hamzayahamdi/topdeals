@@ -32,14 +32,24 @@ export async function fetchStoreAvailability(productRef: string): Promise<StoreA
   };
 }
 
-export async function fetchProducts(): Promise<Product[]> {
+interface FetchProductsParams {
+  category?: string;
+  page?: number;
+}
+
+export async function fetchProducts({ category, page = 1 }: FetchProductsParams) {
   try {
-    const response = await fetch('/api/products/category/tous')
-    if (!response.ok) throw new Error('Failed to fetch products')
-    return response.json()
+    const url = category 
+      ? `/api/products/category/${encodeURIComponent(category)}?page=${page}`
+      : `/api/products?page=${page}`;
+
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Failed to fetch products');
+    
+    return await response.json();
   } catch (error) {
-    console.error('Error fetching products:', error)
-    return []
+    console.error('Error fetching products:', error);
+    return { products: [], hasMore: false };
   }
 }
 

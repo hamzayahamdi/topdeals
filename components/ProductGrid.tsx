@@ -1,169 +1,80 @@
 'use client'
 
-import { motion, AnimatePresence } from 'framer-motion'
+import { useEffect, useState } from 'react'
+import { useInView } from 'react-intersection-observer'
 import ProductCard from './ProductCard'
 import { Product } from '@/lib/types'
-import ProductGridSkeleton from './ProductGridSkeleton'
-import { useState, useEffect, useRef, useCallback } from 'react'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { fetchProducts } from '@/lib/api'
 
 interface ProductGridProps {
-  products?: Product[]
+  products: Product[]
   category?: string
 }
 
-export default function ProductGrid({ products, category }: ProductGridProps) {
-  const router = useRouter()
-  const [isLoading, setIsLoading] = useState(true)
-  const [displayedProducts, setDisplayedProducts] = useState<Product[]>([])
+export default function ProductGrid({ products: initialProducts, category }: ProductGridProps) {
+  const [products, setProducts] = useState<Product[]>(initialProducts)
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
-  const observer = useRef<IntersectionObserver | null>(null)
-  const loadingRef = useRef<HTMLDivElement | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const { ref, inView } = useInView()
 
-  // For category pages - fetch products
-  const fetchProducts = useCallback(async (pageNum: number) => {
-    if (!category) return null
-    try {
-      console.log(`Fetching page ${pageNum} for category ${category}`)
-      const response = await fetch(
-        `/api/products/category/${encodeURIComponent(category)}?page=${pageNum}&limit=16`
-      )
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch products')
-      }
-      
-      const result = await response.json()
-      console.log(`Received ${result.products?.length || 0} products`)
-      
-      return {
-        products: result.products || [],
-        hasMore: result.hasMore || false
-      }
-    } catch (error) {
-      console.error('Error fetching products:', error)
-      setHasMore(false)
-      return { products: [], hasMore: false }
-    }
-  }, [category])
-
-  // For home page - display provided products
   useEffect(() => {
-    if (products) {
-      setIsLoading(true)
-      setDisplayedProducts([])
-      const timer = setTimeout(() => {
-        setDisplayedProducts(products)
-        setIsLoading(false)
-      }, 500)
-      return () => clearTimeout(timer)
-    }
-  }, [products])
+    setProducts(initialProducts)
+    setPage(1)
+    setHasMore(true)
+  }, [initialProducts])
 
-  // For category pages - fetch initial products
   useEffect(() => {
-    if (category) {
-      setIsLoading(true)
-      setDisplayedProducts([])
-      setPage(1)
-      
-      fetchProducts(1)?.then((result) => {
-        if (result) {
-          setDisplayedProducts(result.products)
-          setHasMore(result.hasMore)
-        }
-        setIsLoading(false)
-      })
-    }
-  }, [category, fetchProducts])
-
-  // Infinite scroll for category pages
-  const lastProductRef = useCallback((node: HTMLDivElement | null) => {
-    if (!category || isLoading) return
-    
-    if (observer.current) observer.current.disconnect()
-    
-    observer.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && hasMore) {
-        const nextPage = page + 1
-        fetchProducts(nextPage)?.then((result) => {
-          if (result) {
-            setDisplayedProducts(prev => [...prev, ...result.products])
-            setHasMore(result.hasMore)
+    const loadMoreProducts = async () => {
+      if (!isLoading && hasMore && inView) {
+        setIsLoading(true)
+        try {
+          const nextPage = page + 1
+          const data = await fetchProducts({
+            category,
+            page: nextPage
+          })
+          
+          if (data.products.length === 0) {
+            setHasMore(false)
+          } else {
+            setProducts(prev => [...prev, ...data.products])
             setPage(nextPage)
+            setHasMore(data.hasMore)
           }
-        })
+        } catch (error) {
+          console.error('Error loading more products:', error)
+          setHasMore(false)
+        } finally {
+          setIsLoading(false)
+        }
       }
-    })
+    }
 
-    if (node) observer.current.observe(node)
-  }, [category, isLoading, hasMore, page, fetchProducts])
-
-  const handleProductClick = (e: React.MouseEvent, slug: string) => {
-    e.preventDefault()
-    router.push(`/products/${slug}`)
-  }
-
-  if (isLoading) {
-    return <ProductGridSkeleton />
-  }
+    loadMoreProducts()
+  }, [inView, hasMore, page, isLoading, category])
 
   return (
-    <AnimatePresence mode="wait">
-      <motion.section 
-        key="product-grid"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.3 }}
-        className="py-8"
-      >
-        <div className="container mx-auto">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {displayedProducts.map((product, index) => (
-              <motion.div
-                key={product.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ 
-                  duration: 0.4,
-                  delay: index * 0.1,
-                  ease: [0.4, 0, 0.2, 1]
-                }}
-                ref={category && index === displayedProducts.length - 1 ? lastProductRef : null}
-              >
-                <Link 
-                  href={`/products/${product.slug}`}
-                  onClick={(e) => handleProductClick(e, product.slug)}
-                  className="block @md:hover:scale-[1.02] @md:transition-transform @md:duration-200"
-                >
-                  <ProductCard 
-                    product={product} 
-                    className="group overflow-hidden bg-white rounded-lg shadow-sm h-full"
-                  />
-                </Link>
-              </motion.div>
-            ))}
+    <div className="w-full">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 p-4">
+        {products.map((product) => (
+          <div key={product.id} className="w-full">
+            <ProductCard product={product} />
           </div>
+        ))}
+      </div>
 
-          {category && hasMore && (
-            <div 
-              ref={loadingRef}
-              className="flex justify-center items-center py-8"
-            >
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="w-8 h-8 border-4 border-gray-200 border-t-gray-800 rounded-full animate-spin"
-              />
-            </div>
+      {hasMore && (
+        <div
+          ref={ref}
+          className="w-full h-20 flex items-center justify-center"
+        >
+          {isLoading && (
+            <div className="w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
           )}
         </div>
-      </motion.section>
-    </AnimatePresence>
+      )}
+    </div>
   )
 }
 

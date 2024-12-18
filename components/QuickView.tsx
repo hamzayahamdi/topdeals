@@ -213,7 +213,7 @@ export default function QuickView({ product, isOpen = false, onClose = () => {},
                   ? "object-cover"
                   : "object-contain"
               }`}
-              sizes="100vw"
+              sizes="(min-width: 1024px) 50vw, 100vw"
               priority={index === 0}
               draggable={false}
               quality={100}
@@ -227,13 +227,13 @@ export default function QuickView({ product, isOpen = false, onClose = () => {},
         <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex items-center justify-between px-4 pointer-events-none">
           <button
             onClick={handlePrevClick}
-            className="p-2 rounded-full bg-white/90 shadow-lg hover:bg-white transition-all duration-200 group z-10 pointer-events-auto"
+            className="p-2 bg-white/90 shadow-lg hover:bg-white transition-all duration-200 group z-10 pointer-events-auto rounded-none"
           >
             <ChevronLeft className="w-6 h-6 text-gray-800 group-hover:text-gray-600" />
           </button>
           <button
             onClick={handleNextClick}
-            className="p-2 rounded-full bg-white/90 shadow-lg hover:bg-white transition-all duration-200 group z-10 pointer-events-auto"
+            className="p-2 bg-white/90 shadow-lg hover:bg-white transition-all duration-200 group z-10 pointer-events-auto rounded-none"
           >
             <ChevronRight className="w-6 h-6 text-gray-800 group-hover:text-gray-600" />
           </button>
@@ -242,7 +242,7 @@ export default function QuickView({ product, isOpen = false, onClose = () => {},
 
       {/* Image Counter */}
       {images.length > 1 && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-sm px-3 py-1.5 rounded-full">
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-sm px-3 py-1.5 rounded-none">
           <span className="text-white text-sm font-medium">
             {currentImageIndex + 1} / {images.length}
           </span>
@@ -279,7 +279,7 @@ export default function QuickView({ product, isOpen = false, onClose = () => {},
 
       {/* Image Counter for Mobile */}
       {images.length > 1 && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-sm px-3 py-1.5 rounded-full">
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-sm px-3 py-1.5 rounded-none">
           <span className="text-white text-sm font-medium">
             {currentImageIndex + 1} / {images.length}
           </span>
@@ -413,10 +413,10 @@ export default function QuickView({ product, isOpen = false, onClose = () => {},
                 ].map((feature) => (
                   <div 
                     key={feature.title}
-                    className={`p-2 sm:p-2.5 rounded-lg bg-${feature.color}-50 border border-${feature.color}-100`}
+                    className={`p-2 sm:p-2.5 rounded-none bg-${feature.color}-50 border border-${feature.color}-100`}
                   >
                     <div className="flex items-start gap-1.5 sm:gap-2">
-                      <div className={`p-1 sm:p-1.5 bg-${feature.color}-100 rounded-lg`}>
+                      <div className={`p-1 sm:p-1.5 bg-${feature.color}-100 rounded-none`}>
                         {feature.icon}
                       </div>
                       <div>
@@ -450,11 +450,11 @@ export default function QuickView({ product, isOpen = false, onClose = () => {},
                         <motion.div 
                           key={store}
                           whileHover={{ scale: 1.02 }}
-                          className={`${status.bg} p-2 sm:p-3 rounded-lg border border-${status.color}-200`}
+                          className={`${status.bg} p-2 sm:p-3 rounded-none border border-${status.color}-200`}
                         >
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-1.5 sm:gap-2">
-                              <div className={`p-1 sm:p-1.5 rounded-full bg-${status.color}-100`}>
+                              <div className={`p-1 sm:p-1.5 rounded-none bg-${status.color}-100`}>
                                 {cityIcons[store]}
                               </div>
                               <div>
@@ -464,7 +464,7 @@ export default function QuickView({ product, isOpen = false, onClose = () => {},
                                 </p>
                               </div>
                             </div>
-                            <div className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium bg-${status.color}-100 text-${status.color}-700`}>
+                            <div className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-none text-[10px] sm:text-xs font-medium bg-${status.color}-100 text-${status.color}-700`}>
                               {stock > 2 ? 'Disponible' : 
                                stock === 0 ? 'Indisponible' : 
                                'Stock limité'}
@@ -524,20 +524,47 @@ export default function QuickView({ product, isOpen = false, onClose = () => {},
           <div className="p-4">
             <button
               onClick={handleWhatsAppOrder}
-              className="w-full bg-green-600 hover:bg-green-500 text-white rounded-lg py-4 px-6 flex items-center justify-center gap-3 transition-all duration-300 hover:scale-[1.02]"
+              className="group relative w-full bg-[#23D366] hover:bg-[#1fb855] text-white rounded-none py-4 px-6 flex items-center justify-center gap-3 transition-all duration-300 overflow-hidden"
             >
-              <WhatsappIcon size={28} className="sm:w-8 sm:h-8" round />
-              <span className="text-lg sm:text-xl font-semibold">Commander via WhatsApp</span>
+              {/* Animated background effect */}
+              <div className="absolute inset-0 flex">
+                <div className="w-1/3 h-full bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 animate-shimmer" />
+              </div>
+
+              {/* Pulsing icon */}
+              <div className="relative">
+                <div className="absolute inset-0 bg-white/20 rounded-full animate-ping opacity-75" />
+                <WhatsappIcon 
+                  size={28} 
+                  className="sm:w-8 sm:h-8 relative z-10" 
+                  round={false}
+                  bgStyle={{ fill: "transparent" }}  // Make background transparent
+                  iconFillColor="white"              // Make icon white
+                />
+              </div>
+
+              {/* Text with hover effect */}
+              <span className="text-lg sm:text-xl font-semibold relative z-10 flex items-center gap-2 transform group-hover:scale-105 transition-transform duration-200">
+                Commander via WhatsApp
+                
+                {/* Arrow animation */}
+                <span className="inline-block transform group-hover:translate-x-1 transition-transform duration-200">
+                  →
+                </span>
+              </span>
+
+              {/* Corner accent */}
+              <div className="absolute top-0 right-0 w-8 h-8 bg-white/10 transform rotate-45 translate-x-1/2 -translate-y-1/2" />
             </button>
             <p className="text-center text-xs sm:text-sm text-gray-600 mt-3 flex items-center justify-center gap-2">
               <Headphones 
                 size={16} 
-                className="text-blue-500 bg-blue-100 p-1 rounded-full" 
+                className="text-[#23D366] bg-[#23D366]/10 p-1 rounded-none transition-colors duration-200 hover:bg-[#23D366] hover:text-white" 
               />
               Notre équipe est prête à vous aider
               <MessageCircle 
                 size={16} 
-                className="text-purple-500 bg-purple-100 p-1 rounded-full" 
+                className="text-[#23D366] bg-[#23D366]/10 p-1 rounded-none transition-colors duration-200 hover:bg-[#23D366] hover:text-white" 
               />
             </p>
           </div>
@@ -669,10 +696,10 @@ export default function QuickView({ product, isOpen = false, onClose = () => {},
               ].map((feature) => (
                 <div 
                   key={feature.title}
-                  className={`p-2 sm:p-2.5 rounded-lg bg-${feature.color}-50 border border-${feature.color}-100`}
+                  className={`p-2 sm:p-2.5 rounded-none bg-${feature.color}-50 border border-${feature.color}-100`}
                 >
                   <div className="flex items-start gap-1.5 sm:gap-2">
-                    <div className={`p-1 sm:p-1.5 bg-${feature.color}-100 rounded-lg`}>
+                    <div className={`p-1 sm:p-1.5 bg-${feature.color}-100 rounded-none`}>
                       {feature.icon}
                     </div>
                     <div>
@@ -706,11 +733,11 @@ export default function QuickView({ product, isOpen = false, onClose = () => {},
                       <motion.div 
                         key={store}
                         whileHover={{ scale: 1.02 }}
-                        className={`${status.bg} p-2 sm:p-3 rounded-lg border border-${status.color}-200`}
+                        className={`${status.bg} p-2 sm:p-3 rounded-none border border-${status.color}-200`}
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-1.5 sm:gap-2">
-                            <div className={`p-1 sm:p-1.5 rounded-full bg-${status.color}-100`}>
+                            <div className={`p-1 sm:p-1.5 rounded-none bg-${status.color}-100`}>
                               {cityIcons[store]}
                             </div>
                             <div>
@@ -720,7 +747,7 @@ export default function QuickView({ product, isOpen = false, onClose = () => {},
                               </p>
                             </div>
                           </div>
-                          <div className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium bg-${status.color}-100 text-${status.color}-700`}>
+                          <div className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-none text-[10px] sm:text-xs font-medium bg-${status.color}-100 text-${status.color}-700`}>
                             {stock > 2 ? 'Disponible' : 
                              stock === 0 ? 'Indisponible' : 
                              'Stock limité'}
@@ -779,20 +806,47 @@ export default function QuickView({ product, isOpen = false, onClose = () => {},
               <div className="p-6">
             <button
               onClick={handleWhatsAppOrder}
-              className="w-full bg-green-600 hover:bg-green-500 text-white rounded-lg py-4 px-6 flex items-center justify-center gap-3 transition-all duration-300 hover:scale-[1.02]"
+              className="group relative w-full bg-[#23D366] hover:bg-[#1fb855] text-white rounded-none py-4 px-6 flex items-center justify-center gap-3 transition-all duration-300 overflow-hidden"
             >
-              <WhatsappIcon size={28} className="sm:w-8 sm:h-8" round />
-              <span className="text-lg sm:text-xl font-semibold">Commander via WhatsApp</span>
+              {/* Animated background effect */}
+              <div className="absolute inset-0 flex">
+                <div className="w-1/3 h-full bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 animate-shimmer" />
+              </div>
+
+              {/* Pulsing icon */}
+              <div className="relative">
+                <div className="absolute inset-0 bg-white/20 rounded-full animate-ping opacity-75" />
+                <WhatsappIcon 
+                  size={28} 
+                  className="sm:w-8 sm:h-8 relative z-10" 
+                  round={false}
+                  bgStyle={{ fill: "transparent" }}  // Make background transparent
+                  iconFillColor="white"              // Make icon white
+                />
+              </div>
+
+              {/* Text with hover effect */}
+              <span className="text-lg sm:text-xl font-semibold relative z-10 flex items-center gap-2 transform group-hover:scale-105 transition-transform duration-200">
+                Commander via WhatsApp
+                
+                {/* Arrow animation */}
+                <span className="inline-block transform group-hover:translate-x-1 transition-transform duration-200">
+                  →
+                </span>
+              </span>
+
+              {/* Corner accent */}
+              <div className="absolute top-0 right-0 w-8 h-8 bg-white/10 transform rotate-45 translate-x-1/2 -translate-y-1/2" />
             </button>
             <p className="text-center text-xs sm:text-sm text-gray-600 mt-3 flex items-center justify-center gap-2">
               <Headphones 
                 size={16} 
-                className="text-blue-500 bg-blue-100 p-1 rounded-full" 
+                className="text-[#23D366] bg-[#23D366]/10 p-1 rounded-none transition-colors duration-200 hover:bg-[#23D366] hover:text-white" 
               />
               Notre équipe est prête à vous aider
               <MessageCircle 
                 size={16} 
-                className="text-purple-500 bg-purple-100 p-1 rounded-full" 
+                className="text-[#23D366] bg-[#23D366]/10 p-1 rounded-none transition-colors duration-200 hover:bg-[#23D366] hover:text-white" 
               />
             </p>
           </div>
@@ -812,10 +866,10 @@ export default function QuickView({ product, isOpen = false, onClose = () => {},
   return (
     <AnimatePresence>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="!p-0 !pr-0 rounded-xl max-w-[95vw] sm:max-w-[90vw] md:max-w-[1250px] lg:max-w-[1500px] overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/40">
+        <DialogContent className="!p-0 !pr-0 rounded-none max-w-[95vw] sm:max-w-[90vw] md:max-w-[1250px] lg:max-w-[1500px] overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/40">
           <button
             onClick={onClose}
-            className="absolute right-3 top-3 z-[100] p-2 sm:p-2.5 bg-black/80 hover:bg-black/90 backdrop-blur-sm rounded-full shadow-lg transition-all duration-200 border border-white/20 group"
+            className="absolute right-3 top-3 z-[100] p-2 sm:p-2.5 bg-black/80 hover:bg-black/90 backdrop-blur-sm rounded-none shadow-lg transition-all duration-200 border border-white/20 group"
             aria-label="Fermer"
           >
             <X 

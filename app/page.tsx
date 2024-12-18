@@ -5,13 +5,9 @@ import PageLayout from '@/components/PageLayout'
 async function getProducts() {
   try {
     const products = await prisma.product.findMany({
-      where: {
-        isActive: true
-      },
       orderBy: {
         createdAt: 'desc'
-      },
-      take: 16
+      }
     })
     
     console.log('Found products:', products.length)

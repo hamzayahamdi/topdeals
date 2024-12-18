@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import { Product } from '@prisma/client'
 
 export async function GET(
   request: Request,
@@ -10,75 +11,61 @@ export async function GET(
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '16')
     const skip = (page - 1) * limit
-    const category = decodeURIComponent(params.category).toLowerCase()
+    
+    const decodedCategory = decodeURIComponent(params.category).toLowerCase()
+    console.log('Requested category:', decodedCategory)
 
-    // Debug log
-    console.log('Processing request for:', {
-      originalCategory: params.category,
-      normalizedCategory: category,
-      page,
-      limit
-    })
-
-    // Get unique categories using array methods instead of Set
-    const allProducts = await prisma.product.findMany({
-      select: {
-        mainCategory: true,
-        subCategory: true
-      }
-    })
-
-    const mainCategories = Array.from(
-      new Map(
-        allProducts.map(p => [p.mainCategory?.toLowerCase(), true])
-      ).keys()
-    ).filter(Boolean)
-
-    const subCategories = Array.from(
-      new Map(
-        allProducts.map(p => [p.subCategory?.toLowerCase(), true])
-      ).keys()
-    ).filter(Boolean)
-
-    console.log('Available categories:', { mainCategories, subCategories })
-
-    const products = await prisma.product.findMany({
-      where: {
-        OR: [
-          {
-            mainCategory: {
-              mode: 'insensitive',
-              equals: category
-            }
+    // Handle both /categories/tous and homepage
+    if (decodedCategory === 'tous' || !decodedCategory) {
+      const [products, totalCount] = await Promise.all([
+        prisma.product.findMany({
+          orderBy: {
+            createdAt: 'desc'
           },
-          {
-            subCategory: {
-              mode: 'insensitive',
-              equals: category
-            }
-          }
-        ],
-        isActive: true
-      },
-      orderBy: {
-        createdAt: 'desc'
-      },
-      skip,
-      take: limit,
-    })
+          take: limit,
+          skip: skip,
+        }),
+        prisma.product.count()
+      ])
+      
+      return NextResponse.json({
+        products,
+        hasMore: totalCount > skip + products.length
+      })
+    }
 
-    console.log(`Found ${products.length} products for category "${category}"`)
+    // For specific categories - use raw SQL for better accent handling
+    const [products, totalCount] = await Promise.all([
+      prisma.$queryRaw<Product[]>`
+        SELECT * FROM "Product"
+        WHERE LOWER(unaccent("mainCategory")) LIKE LOWER(unaccent(${`%${decodedCategory}%`}))
+        OR LOWER(unaccent("subCategory")) LIKE LOWER(unaccent(${`%${decodedCategory}%`}))
+        ORDER BY "createdAt" DESC
+        LIMIT ${limit}
+        OFFSET ${skip}
+      `,
+      prisma.$queryRaw<{ count: bigint }[]>`
+        SELECT COUNT(*) as count FROM "Product"
+        WHERE LOWER(unaccent("mainCategory")) LIKE LOWER(unaccent(${`%${decodedCategory}%`}))
+        OR LOWER(unaccent("subCategory")) LIKE LOWER(unaccent(${`%${decodedCategory}%`}))
+      `
+    ])
+
+    console.log(`Found ${products.length} products for category ${decodedCategory}`)
 
     return NextResponse.json({
       products,
-      hasMore: products.length === limit
+      hasMore: Number(totalCount[0].count) > skip + products.length
     })
 
-  } catch (error) {
-    console.error('Error in category API:', error)
-    return NextResponse.json({
-      products: [],
-      hasMore: false
-    }, { status: 500 })
+  } catch (error: any) {
+    console.error('Error in API route:', error)
+    return NextResponse.json(
+      { 
+        error: 'Failed to fetch products', 
+        details: error?.message || 'Unknown error'
+      }, 
+      { status: 500 }
+    )
   }
 } 
