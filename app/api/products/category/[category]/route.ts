@@ -10,49 +10,66 @@ export async function GET(
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '16')
     const skip = (page - 1) * limit
-    const category = decodeURIComponent(params.category)
+    const category = decodeURIComponent(params.category).toLowerCase()
 
-    // Use a transaction for parallel queries
-    const [products, total] = await prisma.$transaction([
-      prisma.product.findMany({
-        where: {
-          OR: [
-            { mainCategory: category },
-            { subCategory: category }
-          ],
-          isActive: true
-        },
-        orderBy: {
-          createdAt: 'desc'
-        },
-        skip,
-        take: limit,
-      }),
-      prisma.product.count({
-        where: {
-          OR: [
-            { mainCategory: category },
-            { subCategory: category }
-          ],
-          isActive: true
-        }
-      })
-    ])
+    // Debug log
+    console.log('Processing request for:', {
+      originalCategory: params.category,
+      normalizedCategory: category,
+      page,
+      limit
+    })
+
+    // First get all products to check categories
+    const allProducts = await prisma.product.findMany({
+      select: {
+        mainCategory: true,
+        subCategory: true
+      }
+    })
+
+    console.log('Available categories:', {
+      mainCategories: [...new Set(allProducts.map(p => p.mainCategory?.toLowerCase()))],
+      subCategories: [...new Set(allProducts.map(p => p.subCategory?.toLowerCase()))]
+    })
+
+    const products = await prisma.product.findMany({
+      where: {
+        OR: [
+          {
+            mainCategory: {
+              mode: 'insensitive',
+              equals: category
+            }
+          },
+          {
+            subCategory: {
+              mode: 'insensitive',
+              equals: category
+            }
+          }
+        ],
+        isActive: true
+      },
+      orderBy: {
+        createdAt: 'desc'
+      },
+      skip,
+      take: limit,
+    })
+
+    console.log(`Found ${products.length} products for category "${category}"`)
 
     return NextResponse.json({
       products,
-      pagination: {
-        total,
-        pages: Math.ceil(total / limit),
-        currentPage: page,
-        hasMore: skip + products.length < total
-      }
+      hasMore: products.length === limit
     })
+
   } catch (error) {
-    console.error('Error fetching category products:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch products' },
-      { status: 500 }
-    )
+    console.error('Error in category API:', error)
+    return NextResponse.json({
+      products: [],
+      hasMore: false
+    }, { status: 500 })
   }
 } 

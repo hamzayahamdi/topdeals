@@ -24,18 +24,25 @@ export default function ProductGrid({ products, category }: ProductGridProps) {
   const fetchProducts = useCallback(async (pageNum: number) => {
     if (!category) return null
     try {
+      console.log(`Fetching page ${pageNum} for category ${category}`)
       const response = await fetch(
-        `/api/products/category/${category}?page=${pageNum}&limit=16`
+        `/api/products/category/${encodeURIComponent(category)}?page=${pageNum}&limit=16`
       )
-      if (!response.ok) throw new Error('Failed to fetch')
       
-      const data = await response.json()
+      if (!response.ok) {
+        throw new Error('Failed to fetch products')
+      }
+      
+      const result = await response.json()
+      console.log(`Received ${result.products?.length || 0} products`)
+      
       return {
-        products: data.products,
-        hasMore: data.pagination.hasMore
+        products: result.products || [],
+        hasMore: result.hasMore || false
       }
     } catch (error) {
       console.error('Error fetching products:', error)
+      setHasMore(false)
       return { products: [], hasMore: false }
     }
   }, [category])
