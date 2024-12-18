@@ -72,21 +72,25 @@ export default function Header() {
     handleCategoryClick('Tous')
   }
 
-  // Add useEffect for click outside handling
+  // Update the click outside handler
   useEffect(() => {
-    const handleClickOutside = () => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement
+      const menuButton = document.getElementById('mobile-menu-button')
+      
+      // If clicking the menu button, let the onClick handler handle it
+      if (menuButton?.contains(target)) {
+        return
+      }
+
+      // Otherwise, close the menu when clicking outside
       if (isMobileMenuOpen) {
         setIsMobileMenuOpen(false)
       }
     }
 
-    if (isMobileMenuOpen) {
-      document.addEventListener('mousedown', handleClickOutside)
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [isMobileMenuOpen])
 
   return (
@@ -190,7 +194,11 @@ export default function Header() {
               <div className="relative group">
                 <div className="absolute inset-0 transform -skew-x-12 transition-all duration-300 bg-white/5 group-hover:bg-white/10" />
                 <button
-                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                  id="mobile-menu-button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setIsMobileMenuOpen(!isMobileMenuOpen)
+                  }}
                   className="relative z-10 flex items-center gap-1.5 px-4 py-2.5"
                 >
                   <Menu size={18} className="text-gray-300 group-hover:text-white transition-colors" />

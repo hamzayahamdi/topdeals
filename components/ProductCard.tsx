@@ -9,10 +9,12 @@ import { Tag, Ruler, Truck, Check, AlertCircle, Loader2, Eye } from 'lucide-reac
 import { fetchStoreAvailability } from '@/lib/api'
 import type { StoreAvailability } from '@/lib/api'
 import Link from 'next/link'
+import { formatPrice } from '@/lib/utils'
 
 interface ProductCardProps {
   product: Product
-  onQuickView?: (product: Product) => void
+  className?: string
+  onQuickView?: () => void
 }
 
 const getCategoryColor = (category: string) => {
@@ -30,7 +32,7 @@ const getCategoryColor = (category: string) => {
   return { baseColor, lighterColor };
 };
 
-export default function ProductCard({ product, onQuickView }: ProductCardProps) {
+export default function ProductCard({ product, className, onQuickView }: ProductCardProps) {
   const [availability, setAvailability] = useState<StoreAvailability | null>(null)
 
   useEffect(() => {
@@ -101,12 +103,8 @@ export default function ProductCard({ product, onQuickView }: ProductCardProps) 
   }, [availability])
 
   return (
-    <div className="h-full">
-      <motion.div
-        whileHover={{ scale: 1.03 }}
-        transition={{ duration: 0.2 }}
-        className="h-full cursor-pointer relative group"
-      >
+    <div className={`h-full ${className}`}>
+      <div className="h-full cursor-pointer relative group">
         <Card className="overflow-hidden h-full flex flex-col bg-white">
           <CardContent className="p-0 relative">
             <Link 
@@ -119,9 +117,8 @@ export default function ProductCard({ product, onQuickView }: ProductCardProps) 
                   alt={product.name}
                   fill
                   sizes="(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-                  className="object-cover transition-transform duration-300 ease-in-out group-hover:scale-105"
-                  priority={true}
-                  loading="eager"
+                  className="object-cover"
+                  priority={false}
                 />
                 
                 <motion.div 
@@ -245,7 +242,7 @@ export default function ProductCard({ product, onQuickView }: ProductCardProps) 
             </div>
           </CardFooter>
         </Card>
-      </motion.div>
+      </div>
     </div>
   )
 }

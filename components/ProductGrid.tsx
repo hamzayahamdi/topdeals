@@ -6,6 +6,7 @@ import { Product } from '@/lib/types'
 import ProductGridSkeleton from './ProductGridSkeleton'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 interface ProductGridProps {
   products?: Product[]
@@ -13,6 +14,7 @@ interface ProductGridProps {
 }
 
 export default function ProductGrid({ products, category }: ProductGridProps) {
+  const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)
   const [displayedProducts, setDisplayedProducts] = useState<Product[]>([])
   const [page, setPage] = useState(1)
@@ -99,6 +101,11 @@ export default function ProductGrid({ products, category }: ProductGridProps) {
     if (node) observer.current.observe(node)
   }, [category, isLoading, hasMore, page, fetchProducts])
 
+  const handleProductClick = (e: React.MouseEvent, slug: string) => {
+    e.preventDefault()
+    router.push(`/products/${slug}`)
+  }
+
   if (isLoading) {
     return <ProductGridSkeleton />
   }
@@ -129,9 +136,13 @@ export default function ProductGrid({ products, category }: ProductGridProps) {
               >
                 <Link 
                   href={`/products/${product.slug}`}
-                  className="block transition-transform duration-200 hover:scale-[1.02]"
+                  onClick={(e) => handleProductClick(e, product.slug)}
+                  className="block @md:hover:scale-[1.02] @md:transition-transform @md:duration-200"
                 >
-                  <ProductCard product={product} />
+                  <ProductCard 
+                    product={product} 
+                    className="group overflow-hidden bg-white rounded-lg shadow-sm h-full"
+                  />
                 </Link>
               </motion.div>
             ))}
