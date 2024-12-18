@@ -13,13 +13,14 @@ export default function PageLayout({ children }: PageLayoutProps) {
       
       {/* Sketch logo - sticky but behind content */}
       <div className="fixed top-[80px] w-full flex justify-center pointer-events-none" style={{ zIndex: 0 }}>
-        <div className="relative w-full max-w-[300px] md:max-w-[450px] lg:max-w-[600px] aspect-[3/1]">
+        <div className="relative w-full max-w-[300px] md:max-w-[450px] lg:max-w-[600px]">
           <Image
             src="https://zruplcd5sfldkzdm.public.blob.vercel-storage.com/SketchDesign.svg"
             alt="Sketch Design"
-            fill
+            width={600}
+            height={200}
             priority
-            className="object-contain brightness-0 invert opacity-20"
+            className="w-full h-auto object-contain brightness-0 invert opacity-20"
           />
         </div>
       </div>

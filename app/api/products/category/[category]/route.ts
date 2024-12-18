@@ -20,7 +20,7 @@ export async function GET(
       limit
     })
 
-    // First get all products to check categories
+    // Get unique categories using array methods instead of Set
     const allProducts = await prisma.product.findMany({
       select: {
         mainCategory: true,
@@ -28,10 +28,19 @@ export async function GET(
       }
     })
 
-    console.log('Available categories:', {
-      mainCategories: [...new Set(allProducts.map(p => p.mainCategory?.toLowerCase()))],
-      subCategories: [...new Set(allProducts.map(p => p.subCategory?.toLowerCase()))]
-    })
+    const mainCategories = Array.from(
+      new Map(
+        allProducts.map(p => [p.mainCategory?.toLowerCase(), true])
+      ).keys()
+    ).filter(Boolean)
+
+    const subCategories = Array.from(
+      new Map(
+        allProducts.map(p => [p.subCategory?.toLowerCase(), true])
+      ).keys()
+    ).filter(Boolean)
+
+    console.log('Available categories:', { mainCategories, subCategories })
 
     const products = await prisma.product.findMany({
       where: {

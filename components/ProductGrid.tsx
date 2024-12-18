@@ -131,9 +131,7 @@ export default function ProductGrid({ products, category }: ProductGridProps) {
                   href={`/products/${product.slug}`}
                   className="block transition-transform duration-200 hover:scale-[1.02]"
                 >
-                  <ProductCard 
-                    product={product}
-                  />
+                  <ProductCard product={product} />
                 </Link>
               </motion.div>
             ))}
